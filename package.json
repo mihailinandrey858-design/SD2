@@ -1,0 +1,13 @@
+{
+  "name": "sdonate",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SDonate web panel and plugin backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "nodemailer": "^7.0.0"
+  }
+}

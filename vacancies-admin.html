@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#080910">
+    <link rel="icon" type="image/png" href="./img/Серебристый куб с эмблемой SD.png">
+    <title>Форма — SDonate</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/dashboard.css">
+    <link rel="stylesheet" href="./css/collections.css">
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="./index.html">
+            <img src="./img/Серебристый куб с эмблемой SD.png" alt="">
+            <span>SDonate</span>
+        </a>
+        <nav class="main-nav" aria-label="Главная навигация">
+            <a class="nav-link" href="./dashboard.html"><img class="nav-icon" src="./img/house.png" alt="">Главная</a>
+            <a class="nav-link" href="./finance.html"><img class="nav-icon" src="./img/hand-coins.png" alt="">Финансы</a>
+            <a class="nav-link active" href="./shops.html"><img class="nav-icon" src="./img/shopping-basket.png" alt="">Магазины</a>
+            <a class="nav-link" href="./settings.html"><img class="nav-icon" src="./img/bolt.png" alt="">Настройки</a>
+        </nav>
+        <div class="top-actions">
+            <a class="help-link" href="https://t.me/Sdonat1" target="_blank" rel="noopener noreferrer"><img class="nav-icon" src="./img/message-square-more.png" alt=""> Помощь</a>
+            <div class="account-menu">
+                <span class="account-avatar" id="account-avatar">S</span>
+                <span class="account-name"><b id="account-name">Игрок</b><small>Аккаунт</small></span>
+                <button class="logout-button" id="logout-button" type="button">Выйти</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-content col-page">
+        <section class="col-card">
+            <div class="col-head">
+                <a class="col-back" id="col-back" href="./shops.html" aria-label="Назад">←</a>
+                <h1>Создание формы</h1>
+            </div>
+            <p class="col-sub">Укажи, кто нужен серверу. Форма появится в витрине магазина, заявки игроков придут сюда же, на сайт.</p>
+
+            <form class="col-grid" id="vac-form" novalidate>
+                <div class="col-left">
+                    <label class="col-label" for="vac-role">Кто нужен <i>*</i></label>
+                    <select class="col-input" id="vac-role">
+                        <option>Хелпер</option>
+                        <option>Модератор</option>
+                        <option>TikTok-мейкер</option>
+                        <option>Ютубер</option>
+                        <option>Куратор</option>
+                    </select>
+
+                    <label class="col-label" for="vac-server">Сервер</label>
+                    <select class="col-input" id="vac-server"><option value="">Все сервера</option></select>
+                </div>
+                <div class="col-left">
+                    <label class="col-label" for="vac-text">Требования и условия <i>*</i></label>
+                    <textarea class="col-input" id="vac-text" rows="6" maxlength="500" placeholder="Возраст, онлайн, опыт, что нужно делать, оплата…"></textarea>
+
+                    <span class="col-label">Вопросы анкеты</span>
+                    <div id="vac-questions"></div>
+                    <button class="col-add vac-add-q" type="button" id="vac-add-q">+ Добавить вопрос</button>
+                </div>
+                <div class="col-actions">
+                    <button class="col-add" type="submit">Добавить</button>
+                    <span class="col-msg" id="col-msg" role="status"></span>
+                </div>
+            </form>
+
+            <h2 class="col-list-title">Формы магазина <span id="col-count">0</span></h2>
+            <div class="col-list" id="col-list"></div>
+
+            <h2 class="col-list-title">Заявки игроков <span id="app-count">0</span></h2>
+            <div class="app-list" id="app-list"></div>
+            <p class="col-sub" id="app-empty">Пока нет заявок. Они появятся здесь, когда игроки заполнят анкету в магазине.</p>
+        </section>
+    </main>
+
+    <script src="./js/local-api.js"></script>
+    <script src="./js/auth-session.js"></script>
+    <script src="./js/demo-shop-storage.js"></script>
+    <script src="./js/vacancies-admin.js"></script>
+</body>
+</html>

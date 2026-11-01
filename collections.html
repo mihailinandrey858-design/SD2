@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#080910">
+    <link rel="icon" type="image/png" href="./img/Серебристый куб с эмблемой SD.png">
+    <title>Подборки — SDonate</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/dashboard.css">
+    <link rel="stylesheet" href="./css/collections.css">
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="./index.html">
+            <img src="./img/Серебристый куб с эмблемой SD.png" alt="">
+            <span>SDonate</span>
+        </a>
+        <nav class="main-nav" aria-label="Главная навигация">
+            <a class="nav-link" href="./dashboard.html"><img class="nav-icon" src="./img/house.png" alt="">Главная</a>
+            <a class="nav-link" href="./finance.html"><img class="nav-icon" src="./img/hand-coins.png" alt="">Финансы</a>
+            <a class="nav-link active" href="./shops.html"><img class="nav-icon" src="./img/shopping-basket.png" alt="">Магазины</a>
+            <a class="nav-link" href="./settings.html"><img class="nav-icon" src="./img/bolt.png" alt="">Настройки</a>
+        </nav>
+        <div class="top-actions">
+            <a class="help-link" href="https://t.me/Sdonat1" target="_blank" rel="noopener noreferrer"><img class="nav-icon" src="./img/message-square-more.png" alt=""> Помощь</a>
+            <div class="account-menu">
+                <span class="account-avatar" id="account-avatar">S</span>
+                <span class="account-name"><b id="account-name">Игрок</b><small>Аккаунт</small></span>
+                <button class="logout-button" id="logout-button" type="button">Выйти</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-content col-page">
+        <section class="col-card">
+            <div class="col-head">
+                <a class="col-back" id="col-back" href="./shops.html" aria-label="Назад">←</a>
+                <h1>Добавление подборки</h1>
+            </div>
+            <p class="col-sub">Укажите название и необходимые товары. При желании можно поставить картинку.</p>
+
+            <form class="col-grid" id="col-form" novalidate>
+                <div class="col-left">
+                    <label class="col-label" for="col-name">Название подборки <i>*</i></label>
+                    <input class="col-input" id="col-name" maxlength="60" placeholder="Укажите название">
+
+                    <label class="col-label" for="col-server">Сервер</label>
+                    <select class="col-input" id="col-server"><option value="">Все сервера</option></select>
+
+                    <span class="col-label">Изображение</span>
+                    <label class="col-image" id="col-image-box">
+                        <input type="file" id="col-image" accept="image/*" hidden>
+                        <svg id="col-image-ph" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M9 15l5-5 2 2-5 5H9z"></path></svg>
+                        <img id="col-image-preview" alt="" hidden>
+                    </label>
+                </div>
+
+                <div class="col-right">
+                    <div class="col-products" id="col-products"></div>
+                    <p class="col-empty" id="col-empty" hidden>Товаров пока нет. Добавь их в разделе «Товары».</p>
+                </div>
+
+                <div class="col-actions">
+                    <button class="col-add" type="submit">Добавить</button>
+                    <span class="col-msg" id="col-msg" role="status"></span>
+                </div>
+            </form>
+
+            <h2 class="col-list-title">Подборки магазина <span id="col-count">0</span></h2>
+            <div class="col-list" id="col-list"></div>
+        </section>
+    </main>
+
+    <script src="./js/local-api.js"></script>
+    <script src="./js/auth-session.js"></script>
+    <script src="./js/demo-image-storage.js"></script>
+    <script src="./js/demo-shop-storage.js"></script>
+    <script src="./js/collections.js"></script>
+</body>
+</html>

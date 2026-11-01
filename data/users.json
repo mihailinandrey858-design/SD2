@@ -1,0 +1,20 @@
+[
+  {
+    "id": "cd7acc1c-883f-4fe8-9720-2bbae9694367",
+    "nickname": "kobo",
+    "email": "admin@example.com",
+    "passwordHash": "345b0aef9ba076aa31f7467fbfead50b:79e7718cca962f8ed1e75bf3f35e619c9819d14a20602336af07c07ae53f8f15de2d4d88df415cb43522ff63db64c0b505d0b25f7918e69ec3ecccaee65f9740",
+    "role": "admin",
+    "active": true,
+    "createdAt": "2026-11-01T12:45:51.775Z"
+  },
+  {
+    "id": "328352f0-3fd2-443a-a2c2-674a2f045d31",
+    "nickname": "DemoReset",
+    "email": "demoreset@example.com",
+    "passwordHash": "1e2f9fb696707274274aa592f4288381:0d6dc645ac4cc4c4180b13793c98def19819c7642fabf5779573f696bbf4169ddc90c0c8734ecf0edcca92b9667590d9aa5ee60fd7775548e2ab1d809100edc4",
+    "role": "user",
+    "active": true,
+    "createdAt": "2026-11-01T12:46:12.406Z"
+  }
+]
