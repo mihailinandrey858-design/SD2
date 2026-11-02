@@ -46,6 +46,10 @@
     };
 
     async function handle(path, method, body) {
+        if (path === "/api/auth/captcha-config" && method === "GET") {
+            return json(200, { enabled: false, siteKey: null });
+        }
+
         if (path === "/api/auth/me" && method === "GET") {
             const user = currentUser();
             return user ? json(200, { user: publicUser(user) }) : json(401, { error: "Нужно войти в аккаунт." });

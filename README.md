@@ -29,7 +29,8 @@ nano .env
 - `SDONATE_ADMIN_EMAIL` и `SDONATE_ADMIN_PASSWORD` (от 12 символов) — создаётся аккаунт администратора;
 - `PUBLIC_BASE_URL` — публичный адрес, например `http://123.45.67.89:3000` или `https://sdonate.example.com`. Если не задать, ссылки строятся из заголовка Host запроса;
 - `SMTP_*` — чтобы письма сброса пароля уходили на почту (без SMTP ссылка пишется в лог сервера);
-- `SDONATE_TELEGRAM_BOT_TOKEN` + `SDONATE_TELEGRAM_CHAT_ID` — уведомления о заявках в Telegram.
+- `SDONATE_TELEGRAM_BOT_TOKEN` + `SDONATE_TELEGRAM_CHAT_ID` — уведомления о заявках в Telegram;
+- `RECAPTCHA_SITE_KEY` + `RECAPTCHA_SECRET_KEY` — Google reCAPTCHA v2 («Я не робот») на входе и регистрации. Ключи создаются на https://www.google.com/recaptcha/admin/create (тип: reCAPTCHA v2 → флажок «Я не робот»; в домены добавь IP сервера и/или свой домен). Без ключей капча отключена.
 
 ### 4. Запуск
 

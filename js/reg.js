@@ -16,8 +16,63 @@ const passwordHint = document.querySelector("#password-hint");
 const forgotLink = document.querySelector("#forgot-link");
 const message = document.querySelector("#form-message");
 const showPasswordButton = document.querySelector(".show-password");
+const captchaField = document.querySelector("#captcha-field");
 
 let currentMode = "register";
+let recaptchaWidgetId = null;
+let recaptchaEnabled = false;
+
+function getRecaptchaToken() {
+    if (!recaptchaEnabled || recaptchaWidgetId === null || !window.grecaptcha) {
+        return "";
+    }
+    return grecaptcha.getResponse(recaptchaWidgetId);
+}
+
+function resetRecaptcha() {
+    if (recaptchaEnabled && recaptchaWidgetId !== null && window.grecaptcha) {
+        grecaptcha.reset(recaptchaWidgetId);
+    }
+}
+
+function renderRecaptcha(siteKey) {
+    if (recaptchaWidgetId !== null || !window.grecaptcha || !grecaptcha.render) {
+        return;
+    }
+    recaptchaWidgetId = grecaptcha.render("recaptcha-widget", { sitekey: siteKey, theme: "dark" });
+    captchaField.hidden = false;
+}
+
+function loadRecaptchaScript(siteKey) {
+    window.onRecaptchaLoad = () => renderRecaptcha(siteKey);
+    const script = document.createElement("script");
+    script.src = "https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit";
+    script.async = true;
+    script.defer = true;
+    script.onerror = () => showMessage("Не удалось загрузить reCAPTCHA. Проверь подключение к интернету.", "error");
+    document.head.appendChild(script);
+}
+
+async function initCaptcha() {
+    try {
+        const response = await fetch("/api/auth/captcha-config", { credentials: "same-origin", cache: "no-store" });
+        if (!response.ok) {
+            return;
+        }
+        const config = await response.json();
+        if (!config.enabled || !config.siteKey) {
+            return;
+        }
+        recaptchaEnabled = true;
+        if (window.grecaptcha && grecaptcha.render) {
+            renderRecaptcha(config.siteKey);
+        } else {
+            loadRecaptchaScript(config.siteKey);
+        }
+    } catch {
+        // reCAPTCHA недоступна (например, локальный режим без сервера) — форма работает без неё
+    }
+}
 
 function showMessage(text, type = "info") {
     message.textContent = text;
@@ -57,6 +112,7 @@ function setMode(mode, updateUrl = true) {
     clearMessage();
     confirmInput.setCustomValidity("");
     form.reset();
+    resetRecaptcha();
 
     if (updateUrl) {
         const url = new URL(window.location.href);
@@ -102,6 +158,12 @@ form.addEventListener("submit", async event => {
         return;
     }
 
+    const recaptchaToken = getRecaptchaToken();
+    if (recaptchaEnabled && !recaptchaToken) {
+        showMessage("Подтверди, что ты не робот.", "error");
+        return;
+    }
+
     const submitLabel = submitButton.firstElementChild;
     const originalLabel = submitLabel.textContent;
     submitButton.disabled = true;
@@ -113,16 +175,24 @@ form.addEventListener("submit", async event => {
             headers: { "Content-Type": "application/json" },
             credentials: "same-origin",
             body: JSON.stringify(currentMode === "login"
-                ? { email: emailInput.value.trim(), password: passwordInput.value }
+                ? {
+                    email: emailInput.value.trim(),
+                    password: passwordInput.value,
+                    recaptchaToken
+                }
                 : {
                     nickname: nicknameInput.value.trim(),
                     email: emailInput.value.trim(),
-                    password: passwordInput.value
+                    password: passwordInput.value,
+                    recaptchaToken
                 })
         });
         const result = await response.json();
         if (!response.ok) {
             showMessage(result.error || "Не удалось выполнить запрос.", "error");
+            if (result.captchaFailed) {
+                resetRecaptcha();
+            }
             return;
         }
 
@@ -142,3 +212,4 @@ form.addEventListener("submit", async event => {
 
 const initialMode = new URLSearchParams(window.location.search).get("mode");
 setMode(initialMode, false);
+initCaptcha();

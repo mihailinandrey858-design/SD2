@@ -46,6 +46,9 @@ const smtpPort = Number(process.env.SMTP_PORT || 587);
 const smtpUser = process.env.SMTP_USER || "";
 const smtpPass = process.env.SMTP_PASS || "";
 const smtpFrom = process.env.SMTP_FROM || smtpUser || "noreply@localhost";
+const recaptchaSiteKey = process.env.RECAPTCHA_SITE_KEY || "";
+const recaptchaSecretKey = process.env.RECAPTCHA_SECRET_KEY || "";
+const recaptchaEnabled = Boolean(recaptchaSiteKey && recaptchaSecretKey);
 const passwordResetLifetimeMs = 60 * 60 * 1000;
 const sessionLifetime = 8 * 60 * 60 * 1000;
 const sessions = new Map();
@@ -566,6 +569,44 @@ async function readJson(request) {
     }
 }
 
+async function verifyRecaptcha(token, remoteAddress) {
+    if (!recaptchaEnabled) {
+        return true;
+    }
+    if (!token || typeof token !== "string" || token.length > 4096) {
+        return false;
+    }
+    try {
+        const params = new URLSearchParams({
+            secret: recaptchaSecretKey,
+            response: token
+        });
+        if (remoteAddress) {
+            params.set("remoteip", remoteAddress);
+        }
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        try {
+            const verification = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: params.toString(),
+                signal: controller.signal
+            });
+            if (!verification.ok) {
+                return false;
+            }
+            const result = await verification.json();
+            return result.success === true;
+        } finally {
+            clearTimeout(timeout);
+        }
+    } catch (error) {
+        console.error(`reCAPTCHA verification failed: ${error.message}`);
+        return false;
+    }
+}
+
 function isAdminAccount(user) {
     return user.role === "admin" && normalizeEmail(user.email) === adminEmail;
 }
@@ -745,8 +786,17 @@ async function handleApi(request, response, url) {
         return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/auth/captcha-config") {
+        sendJson(response, 200, { enabled: recaptchaEnabled, siteKey: recaptchaEnabled ? recaptchaSiteKey : null });
+        return;
+    }
+
     if (request.method === "POST" && url.pathname === "/api/auth/register") {
         const input = await readJson(request);
+        if (!await verifyRecaptcha(input.recaptchaToken, request.socket.remoteAddress)) {
+            sendJson(response, 400, { error: "Подтверди, что ты не робот.", captchaFailed: true });
+            return;
+        }
         const nickname = String(input.nickname || "").trim();
         const email = normalizeEmail(input.email || "");
         const password = String(input.password || "");
@@ -802,6 +852,10 @@ async function handleApi(request, response, url) {
         }
 
         const input = await readJson(request);
+        if (!await verifyRecaptcha(input.recaptchaToken, request.socket.remoteAddress)) {
+            sendJson(response, 400, { error: "Подтверди, что ты не робот.", captchaFailed: true });
+            return;
+        }
         const email = normalizeEmail(input.email || "");
         const password = String(input.password || "");
         const users = await readUsers();
@@ -973,7 +1027,7 @@ async function serveStatic(request, response, url) {
         response.writeHead(404).end("Not found");
         return;
     }
-    if (path.basename(filePath).toLowerCase() === "server.js") {
+    if (["server.js", "package.json", "package-lock.json"].includes(path.basename(filePath).toLowerCase())) {
         response.writeHead(404).end("Not found");
         return;
     }
@@ -1071,6 +1125,11 @@ async function start() {
             void pollTelegramUpdates();
         } else {
             console.warn("Telegram is not configured; verification requests will remain available in the admin panel.");
+        }
+        if (recaptchaEnabled) {
+            console.log("Google reCAPTCHA is enabled for login and registration.");
+        } else {
+            console.warn("reCAPTCHA is not configured; set RECAPTCHA_SITE_KEY and RECAPTCHA_SECRET_KEY to enable it.");
         }
     });
 }
