@@ -1,14 +1,38 @@
 const http = require("node:http");
+const fsSync = require("node:fs");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const crypto = require("node:crypto");
 const nodemailer = require("nodemailer");
 
 const root = __dirname;
+
+// Необязательный .env рядом с server.js — удобно для настройки на VPS.
+(function loadEnvFile() {
+    let content;
+    try {
+        content = fsSync.readFileSync(path.join(root, ".env"), "utf8");
+    } catch {
+        return;
+    }
+    for (const line of content.split(/\r?\n/)) {
+        const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/);
+        if (!match || line.trimStart().startsWith("#")) {
+            continue;
+        }
+        let value = match[2];
+        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.slice(1, -1);
+        }
+        if (process.env[match[1]] === undefined) {
+            process.env[match[1]] = value;
+        }
+    }
+})();
 const usersFile = process.env.SDONATE_USERS_FILE || path.join(root, "data", "users.json");
 const verificationsFile = process.env.SDONATE_VERIFICATIONS_FILE || path.join(root, "data", "verifications.json");
 const passwordResetsFile = process.env.SDONATE_PASSWORD_RESETS_FILE || path.join(root, "data", "password-resets.json");
-const host = process.env.HOST || "127.0.0.1";
+const host = process.env.HOST || "0.0.0.0";
 const port = Number(process.env.PORT || 3000);
 let adminEmail = normalizeEmail(process.env.SDONATE_ADMIN_EMAIL || "");
 const adminNickname = String(process.env.SDONATE_ADMIN_NICKNAME || "Andrey11").trim() || "Andrey11";
@@ -16,7 +40,7 @@ const adminPassword = process.env.SDONATE_ADMIN_PASSWORD || "";
 const telegramToken = process.env.SDONATE_TELEGRAM_BOT_TOKEN || "";
 const telegramChatId = process.env.SDONATE_TELEGRAM_CHAT_ID || "";
 const telegramConfigured = Boolean(telegramToken && telegramChatId);
-const publicBaseUrl = process.env.PUBLIC_BASE_URL || `http://${host}:${port}`;
+const configuredPublicBaseUrl = String(process.env.PUBLIC_BASE_URL || "").replace(/\/+$/, "");
 const smtpHost = process.env.SMTP_HOST || "";
 const smtpPort = Number(process.env.SMTP_PORT || 587);
 const smtpUser = process.env.SMTP_USER || "";
@@ -174,7 +198,7 @@ function updatePasswordResets(update) {
     const operation = verificationWriteQueue.then(async () => {
         const records = await readPasswordResets();
         const result = await update(records);
-        await writePasswordResets(records);
+        await writePasswordResets(Array.isArray(result) ? result : records);
         return result;
     });
     verificationWriteQueue = operation.catch(() => {});
@@ -193,8 +217,8 @@ function getSmtpTransporter() {
     });
 }
 
-async function sendPasswordResetEmail(email, token) {
-    const resetUrl = `${publicBaseUrl}/reset-password.html?token=${encodeURIComponent(token)}`;
+async function sendPasswordResetEmail(email, token, request) {
+    const resetUrl = `${getPublicBaseUrl(request)}/reset-password.html?token=${encodeURIComponent(token)}`;
     const transporter = getSmtpTransporter();
     if (!transporter) {
         console.warn(`Password reset requested for ${email}. Dev reset URL: ${resetUrl}`);
@@ -218,7 +242,7 @@ async function sendPasswordResetEmail(email, token) {
     return { devMode: false, resetUrl };
 }
 
-async function requestPasswordReset(email) {
+async function requestPasswordReset(email, request) {
     const normalizedEmail = normalizeEmail(email);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
         return { ok: false, error: "Укажи корректный адрес электронной почты." };
@@ -246,7 +270,7 @@ async function requestPasswordReset(email) {
         return filtered;
     });
 
-    const result = await sendPasswordResetEmail(normalizedEmail, token);
+    const result = await sendPasswordResetEmail(normalizedEmail, token, request);
     return { ok: true, generic: false, resetUrl: result.resetUrl, devMode: result.devMode };
 }
 
@@ -474,8 +498,30 @@ function getSession(request) {
     return session;
 }
 
+function isSecureRequest(request) {
+    if (request.socket.encrypted) {
+        return true;
+    }
+    const forwardedProto = String(request.headers["x-forwarded-proto"] || "").split(",")[0].trim().toLowerCase();
+    return forwardedProto === "https";
+}
+
+function getPublicBaseUrl(request) {
+    if (configuredPublicBaseUrl) {
+        return configuredPublicBaseUrl;
+    }
+    if (request) {
+        const forwardedHost = String(request.headers["x-forwarded-host"] || "").split(",")[0].trim();
+        const requestHost = forwardedHost || String(request.headers.host || "").trim();
+        if (requestHost) {
+            return `${isSecureRequest(request) ? "https" : "http"}://${requestHost}`;
+        }
+    }
+    return `http://localhost:${port}`;
+}
+
 function setSessionCookie(request, response, sessionId, maxAge) {
-    const isSecureContext = request.socket.encrypted || /^https:/i.test(String(process.env.PUBLIC_BASE_URL || ""));
+    const isSecureContext = isSecureRequest(request);
     const cookieParts = [
         `sdonate_session=${encodeURIComponent(sessionId)}`,
         "HttpOnly",
@@ -783,7 +829,7 @@ async function handleApi(request, response, url) {
     if (request.method === "POST" && url.pathname === "/api/auth/request-password-reset") {
         const input = await readJson(request);
         const email = normalizeEmail(input.email || "");
-        const result = await requestPasswordReset(email);
+        const result = await requestPasswordReset(email, request);
         if (!result.ok) {
             sendJson(response, 400, { error: result.error });
             return;
@@ -899,25 +945,21 @@ async function serveStatic(request, response, url) {
         return;
     }
 
-    if (decodedPath === "/reg.html") {
-        const mode = url.searchParams.get("mode") === "register" ? "register" : "login";
-        response.writeHead(302, { Location: `/?mode=${mode}` }).end();
-        return;
-    }
     if (decodedPath === "/login") {
-        response.writeHead(302, { Location: "/?mode=login" }).end();
+        response.writeHead(302, { Location: "/reg.html?mode=login" }).end();
         return;
     }
     if (decodedPath === "/register") {
-        response.writeHead(302, { Location: "/?mode=register" }).end();
+        response.writeHead(302, { Location: "/reg.html?mode=register" }).end();
         return;
     }
     if (decodedPath === "/auth") {
-        response.writeHead(302, { Location: "/?mode=login" }).end();
+        const mode = url.searchParams.get("mode") === "register" ? "register" : "login";
+        response.writeHead(302, { Location: `/reg.html?mode=${mode}` }).end();
         return;
     }
 
-    const relativePath = decodedPath === "/" ? "index.html" : decodedPath === "/auth" ? "reg.html" : decodedPath.replace(/^\/+/, "");
+    const relativePath = decodedPath === "/" ? "index.html" : decodedPath === "/reg.html" ? "reg.html" : decodedPath.replace(/^\/+/, "");
     const filePath = path.resolve(root, relativePath);
     const pluginDownloadPath = path.join("downloads", "SdPlayments-0.1.0-SNAPSHOT.jar");
     const isPluginDownload = path.relative(root, filePath) === pluginDownloadPath;
@@ -1018,7 +1060,12 @@ async function start() {
     await bootstrapAdmin();
     http.createServer(handleRequest).listen(port, host, () => {
         console.log(`SDonate server listening on http://${host}:${port}`);
-        console.log("Use HTTPS in production; HTTP is intended for local development only.");
+        if (configuredPublicBaseUrl) {
+            console.log(`Public base URL: ${configuredPublicBaseUrl}`);
+        } else {
+            console.log("PUBLIC_BASE_URL is not set; public links will be built from the request Host header.");
+        }
+        console.log("Behind an HTTPS reverse proxy, make sure it sends the X-Forwarded-Proto and X-Forwarded-Host headers.");
         if (telegramConfigured) {
             console.log("Telegram verification notifications and private-chat decisions are enabled.");
             void pollTelegramUpdates();
