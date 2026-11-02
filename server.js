@@ -11,6 +11,7 @@ const passwordResetsFile = process.env.SDONATE_PASSWORD_RESETS_FILE || path.join
 const host = process.env.HOST || "127.0.0.1";
 const port = Number(process.env.PORT || 3000);
 let adminEmail = normalizeEmail(process.env.SDONATE_ADMIN_EMAIL || "");
+const adminNickname = String(process.env.SDONATE_ADMIN_NICKNAME || "Andrey11").trim() || "Andrey11";
 const adminPassword = process.env.SDONATE_ADMIN_PASSWORD || "";
 const telegramToken = process.env.SDONATE_TELEGRAM_BOT_TOKEN || "";
 const telegramChatId = process.env.SDONATE_TELEGRAM_CHAT_ID || "";
@@ -417,6 +418,11 @@ async function bootstrapAdmin() {
         if (existingAdmin && existingAdmin.email !== adminEmail) {
             throw new Error("The configured administrator email does not match the existing admin account.");
         }
+        if (existing.nickname !== adminNickname) {
+            existing.nickname = adminNickname;
+            await writeUsers(users);
+            console.log(`Administrator nickname updated to ${adminNickname}.`);
+        }
         return;
     }
     if (existingAdmin) {
@@ -428,7 +434,7 @@ async function bootstrapAdmin() {
 
     users.push({
         id: crypto.randomUUID(),
-        nickname: "kobo",
+        nickname: adminNickname,
         email: adminEmail,
         passwordHash: await passwordHash(adminPassword),
         role: "admin",
