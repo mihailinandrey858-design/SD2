@@ -1,5 +1,5 @@
 if (sessionStorage.getItem("sdonate-demo-authenticated") !== "true") {
-    window.location.replace("./reg.html?mode=login");
+    window.location.replace("/?mode=login");
 } else {
     (function () {
         var shopId = new URLSearchParams(window.location.search).get("id");
@@ -151,7 +151,7 @@ if (sessionStorage.getItem("sdonate-demo-authenticated") !== "true") {
         $("logout-button").addEventListener("click", function () {
             fetch("/api/auth/logout", { method: "POST" }).catch(function () {}).finally(function () {
                 sessionStorage.removeItem("sdonate-demo-authenticated");
-                window.location.href = "./reg.html?mode=login";
+                window.location.href = "/?mode=login";
             });
         });
 

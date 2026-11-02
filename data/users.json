@@ -16,5 +16,32 @@
     "role": "user",
     "active": true,
     "createdAt": "2026-11-01T12:46:12.406Z"
+  },
+  {
+    "id": "899ca26e-7f1b-4f15-9191-e13462bf24c9",
+    "nickname": "dsfsdfgvsdf",
+    "email": "andreymihai3@gmail.com",
+    "passwordHash": "a122fd8e024b4e02fe000445871f52ea:d01185c8c56f65975e2aac7ffdfe33528bd659bc2e6ef4efb517a8957857c1d43efe67e0a8a40e6c703271d2174680257bf69018df2301614762622c278e1731",
+    "role": "user",
+    "active": true,
+    "createdAt": "2026-11-01T15:19:51.936Z"
+  },
+  {
+    "id": "a8d3489d-9c86-401f-afaa-c9fb84ca6a57",
+    "nickname": "kobo256",
+    "email": "mihailinadr58@gmail.com",
+    "passwordHash": "71612d7251708e1f31fa77af95b2fcf3:8f6fb91357a9f5f52e4e2e85018632410729358b442e39e535eb0b415921315bcf33423d5261413690d4f6bd9b905f0795d7c62fb4883ac7c6654ba00686a4fd",
+    "role": "user",
+    "active": true,
+    "createdAt": "2026-11-01T15:22:08.196Z"
+  },
+  {
+    "id": "0f9a989f-b74b-495b-bc5d-c6c1aeb4cc69",
+    "nickname": "kobo226",
+    "email": "a9978549@gmail.com",
+    "passwordHash": "395c09ba90be9081a5d66eccc7eca8be:36169c2c447c3bedbd3e7d72575315e723c4fefa7ca242424861d08e6a5d5b51061982aeb47127d769813addce640d8daf06ce45bb9dce5b45c8441d962cb2bd",
+    "role": "user",
+    "active": true,
+    "createdAt": "2026-11-02T17:28:09.639Z"
   }
 ]

@@ -72,7 +72,7 @@ window.sdonateEndSession = async function () {
         sessionStorage.removeItem("sdonate-demo-nickname");
         sessionStorage.removeItem("sdonate-demo-email");
         sessionStorage.removeItem("sdonate-demo-user-id");
-        window.location.assign("./reg.html?mode=login");
+        window.location.assign("/?mode=login");
     } catch (error) {
         console.error("Не удалось завершить серверную сессию:", error);
         document.querySelectorAll("#logout-button, #settings-logout").forEach(button => {

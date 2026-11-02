@@ -104,7 +104,7 @@ confirmForm.addEventListener('submit', async (event) => {
         }
         showMessage('Пароль успешно обновлён. Теперь можно войти в аккаунт.');
         setTimeout(() => {
-            window.location.assign('./reg.html?mode=login');
+            window.location.assign('./?mode=login');
         }, 1400);
     } catch (error) {
         console.error(error);

@@ -1,6 +1,6 @@
 (() => {
     if (sessionStorage.getItem("sdonate-demo-authenticated") !== "true") {
-        window.location.replace("./reg.html?mode=login");
+        window.location.replace("/?mode=login");
         return;
     }
 
@@ -329,7 +329,7 @@
 
     document.querySelector("#logout-button").addEventListener("click", () => {
         sessionStorage.removeItem("sdonate-demo-authenticated");
-        window.location.assign("./reg.html?mode=login");
+        window.location.assign("/?mode=login");
     });
 
     try {

@@ -469,8 +469,18 @@ function getSession(request) {
 }
 
 function setSessionCookie(request, response, sessionId, maxAge) {
-    const secure = process.env.NODE_ENV === "production" || request.socket.encrypted;
-    response.setHeader("Set-Cookie", `sdonate_session=${encodeURIComponent(sessionId)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAge}${secure ? "; Secure" : ""}`);
+    const isSecureContext = request.socket.encrypted || /^https:/i.test(String(process.env.PUBLIC_BASE_URL || ""));
+    const cookieParts = [
+        `sdonate_session=${encodeURIComponent(sessionId)}`,
+        "HttpOnly",
+        "Path=/",
+        `Max-Age=${maxAge}`,
+        "SameSite=Lax"
+    ];
+    if (isSecureContext) {
+        cookieParts.push("Secure");
+    }
+    response.setHeader("Set-Cookie", cookieParts.join("; "));
 }
 
 function isSameOrigin(request) {
@@ -882,7 +892,26 @@ async function serveStatic(request, response, url) {
         response.writeHead(400).end("Bad request");
         return;
     }
-    const relativePath = decodedPath === "/" ? "index.html" : decodedPath.replace(/^\/+/, "");
+
+    if (decodedPath === "/reg.html") {
+        const mode = url.searchParams.get("mode") === "register" ? "register" : "login";
+        response.writeHead(302, { Location: `/?mode=${mode}` }).end();
+        return;
+    }
+    if (decodedPath === "/login") {
+        response.writeHead(302, { Location: "/?mode=login" }).end();
+        return;
+    }
+    if (decodedPath === "/register") {
+        response.writeHead(302, { Location: "/?mode=register" }).end();
+        return;
+    }
+    if (decodedPath === "/auth") {
+        response.writeHead(302, { Location: "/?mode=login" }).end();
+        return;
+    }
+
+    const relativePath = decodedPath === "/" ? "index.html" : decodedPath === "/auth" ? "reg.html" : decodedPath.replace(/^\/+/, "");
     const filePath = path.resolve(root, relativePath);
     const pluginDownloadPath = path.join("downloads", "SdPlayments-0.1.0-SNAPSHOT.jar");
     const isPluginDownload = path.relative(root, filePath) === pluginDownloadPath;
@@ -913,7 +942,7 @@ async function serveStatic(request, response, url) {
     if (pageName === "admin.html" || protectedPages.has(pageName) || isPluginDownload) {
         const session = getSession(request);
         if (!session) {
-            response.writeHead(302, { Location: "/reg.html?mode=login" }).end();
+            response.writeHead(302, { Location: "/auth?mode=login" }).end();
             return;
         }
         if (pageName === "admin.html" && !isAdminAccount(session)) {

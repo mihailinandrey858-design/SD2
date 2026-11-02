@@ -1,5 +1,5 @@
 if (sessionStorage.getItem("sdonate-demo-authenticated") !== "true") {
-    window.location.replace("./reg.html?mode=login");
+    window.location.replace("/?mode=login");
 } else {
     const storageKeys = {
         nickname: "sdonate-demo-nickname",
@@ -82,12 +82,12 @@ if (sessionStorage.getItem("sdonate-demo-authenticated") !== "true") {
 
     logoutButton.addEventListener("click", () => {
         sessionStorage.removeItem("sdonate-demo-authenticated");
-        window.location.assign("./reg.html?mode=login");
+        window.location.assign("/?mode=login");
     });
 
     settingsLogoutButton.addEventListener("click", () => {
         sessionStorage.removeItem("sdonate-demo-authenticated");
-        window.location.assign("./reg.html?mode=login");
+        window.location.assign("/?mode=login");
     });
 
     nicknameInput.addEventListener("input", () => {
@@ -331,7 +331,7 @@ if (sessionStorage.getItem("sdonate-demo-authenticated") !== "true") {
     fetch("/api/auth/me", { credentials: "same-origin", cache: "no-store" })
         .then(async response => {
             if (response.status === 401) {
-                window.location.replace("./reg.html?mode=login");
+                window.location.replace("/?mode=login");
                 return null;
             }
             const result = await response.json();

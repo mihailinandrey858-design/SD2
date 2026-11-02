@@ -1,7 +1,7 @@
 async function loadAdminPanel() {
     const response = await fetch("/api/admin/summary", { credentials: "same-origin", cache: "no-store" });
     if (response.status === 401) {
-        window.location.replace("./reg.html?mode=login");
+        window.location.replace("/?mode=login");
         return;
     }
     if (response.status === 403) {
@@ -15,7 +15,7 @@ async function loadAdminPanel() {
 
     const userResponse = await fetch("/api/auth/me", { credentials: "same-origin", cache: "no-store" });
     if (!userResponse.ok) {
-        window.location.replace("./reg.html?mode=login");
+        window.location.replace("/?mode=login");
         return;
     }
     const { user } = await userResponse.json();
@@ -271,7 +271,7 @@ async function loadAdminPanel() {
             sessionStorage.removeItem("sdonate-demo-authenticated");
             sessionStorage.removeItem("sdonate-demo-nickname");
             sessionStorage.removeItem("sdonate-demo-email");
-            window.location.assign("./reg.html?mode=login");
+            window.location.assign("/?mode=login");
         }
     });
 

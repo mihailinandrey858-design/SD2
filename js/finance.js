@@ -1,5 +1,5 @@
 if (sessionStorage.getItem("sdonate-demo-authenticated") !== "true") {
-    window.location.replace("./reg.html?mode=login");
+    window.location.replace("/?mode=login");
 } else {
     const nickname = sessionStorage.getItem("sdonate-demo-nickname") || "Игрок";
     const accountName = document.querySelector("#account-name");
@@ -139,6 +139,6 @@ if (sessionStorage.getItem("sdonate-demo-authenticated") !== "true") {
 
     logoutButton.addEventListener("click", () => {
         sessionStorage.removeItem("sdonate-demo-authenticated");
-        window.location.assign("./reg.html?mode=login");
+        window.location.assign("/?mode=login");
     });
 }

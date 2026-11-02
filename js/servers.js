@@ -1,5 +1,5 @@
 if (sessionStorage.getItem("sdonate-demo-authenticated") !== "true") {
-    window.location.replace("./reg.html?mode=login");
+    window.location.replace("/?mode=login");
 } else {
     const params = new URLSearchParams(window.location.search);
     const shopId = params.get("id");

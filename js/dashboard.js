@@ -1,5 +1,5 @@
 if (sessionStorage.getItem("sdonate-demo-authenticated") !== "true") {
-    window.location.replace("./reg.html?mode=login");
+    window.location.replace("/?mode=login");
 } else {
     const nickname = sessionStorage.getItem("sdonate-demo-nickname") || "Игрок";
     const greetingName = document.querySelector("#greeting-name");
@@ -57,7 +57,7 @@ if (sessionStorage.getItem("sdonate-demo-authenticated") !== "true") {
             sessionStorage.removeItem("sdonate-demo-authenticated");
             sessionStorage.removeItem("sdonate-demo-nickname");
             sessionStorage.removeItem("sdonate-demo-email");
-            window.location.assign("./reg.html?mode=login");
+            window.location.assign("/?mode=login");
         }
     });
 
