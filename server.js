@@ -53,6 +53,28 @@ const passwordResetLifetimeMs = 60 * 60 * 1000;
 const sessionLifetime = 8 * 60 * 60 * 1000;
 const sessions = new Map();
 const loginAttempts = new Map();
+const rateLimitBuckets = new Map();
+
+// Простое ограничение частоты запросов по IP: не больше maxRequests за windowMs.
+function rateLimit(request, bucket, maxRequests, windowMs) {
+    const address = request.socket.remoteAddress || "unknown";
+    const key = `${bucket}:${address}`;
+    const now = Date.now();
+    let entry = rateLimitBuckets.get(key);
+    if (!entry || entry.resetAt <= now) {
+        entry = { count: 0, resetAt: now + windowMs };
+        rateLimitBuckets.set(key, entry);
+    }
+    entry.count += 1;
+    if (rateLimitBuckets.size > 10000) {
+        for (const [bucketKey, value] of rateLimitBuckets) {
+            if (value.resetAt <= now) {
+                rateLimitBuckets.delete(bucketKey);
+            }
+        }
+    }
+    return entry.count <= maxRequests;
+}
 let userWriteQueue = Promise.resolve();
 let verificationWriteQueue = Promise.resolve();
 let telegramUpdateOffset = 0;
@@ -792,6 +814,10 @@ async function handleApi(request, response, url) {
     }
 
     if (request.method === "POST" && url.pathname === "/api/auth/register") {
+        if (!rateLimit(request, "register", 5, 60 * 60 * 1000)) {
+            sendJson(response, 429, { error: "Слишком много регистраций с этого адреса. Попробуй позже." });
+            return;
+        }
         const input = await readJson(request);
         if (!await verifyRecaptcha(input.recaptchaToken, request.socket.remoteAddress)) {
             sendJson(response, 400, { error: "Подтверди, что ты не робот.", captchaFailed: true });
@@ -881,6 +907,10 @@ async function handleApi(request, response, url) {
     }
 
     if (request.method === "POST" && url.pathname === "/api/auth/request-password-reset") {
+        if (!rateLimit(request, "password-reset", 5, 60 * 60 * 1000)) {
+            sendJson(response, 429, { error: "Слишком много запросов сброса пароля. Попробуй позже." });
+            return;
+        }
         const input = await readJson(request);
         const email = normalizeEmail(input.email || "");
         const result = await requestPasswordReset(email, request);
